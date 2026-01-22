@@ -1,4 +1,4 @@
-# Full Stack Engineering Assessment – Enterprise TODO Application
+# Full Stack Engineering Assessment – Production TODO Application
 
 Welcome to the Full Stack Engineering Assessment! This challenge evaluates your ability to build a **production-ready TODO application** with modern architecture patterns, authentication, database integration, and comprehensive testing.
 

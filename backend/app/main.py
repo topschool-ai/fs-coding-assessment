@@ -1,30 +1,17 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+"""Main FastAPI application module."""
 
-# TODO: Import your todos router here
-# from app.routers import todos
+from fastapi import FastAPI
 
 # Create FastAPI instance
 app = FastAPI(
     title="Todo API",
-    description="A simple todo management API built with FastAPI",
+    description="Todo management API with authentication",
     version="1.0.0",
+    # lifespan=lifespan,  # TODO: Uncomment when lifespan is implemented
 )
-
-# Configure CORS for frontend integration
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Frontend URL
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# TODO: Include your todos router
-# app.include_router(todos.router, prefix="/todos", tags=["todos"])
 
 
 @app.get("/")
 async def root():
-    """Health check endpoint"""
-    return {"message": "Todo API is running!"}
+    """Root endpoint."""
+    return {"message": "Todo API is running!", "version": "1.0.0", "docs": "/docs"}

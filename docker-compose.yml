@@ -1,0 +1,2 @@
+# Docker Compose configuration for local development
+# TODO: Create Dockerfiles for backend and frontend and docker-compose to run both services together

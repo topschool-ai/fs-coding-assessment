@@ -1,193 +1,243 @@
-# Backend Coding Assessment - FastAPI Todo API
+# Backend Assessment - FastAPI Todo API with Authentication & Database
 
 ## Overview
 
-This assessment evaluates your ability to build a RESTful API using FastAPI. You'll be creating the backend for a todo management system. Ideally this back end could be used by [front end coding assessment](https://github.com/topschool-ai/fe-coding-assessment). This assessment should cover:
+This assessment evaluates your ability to build a **production-grade RESTful API** using FastAPI. You'll create a secure, scalable backend for a todo management system with authentication, database integration, and comprehensive testing.
 
-- FastAPI application structure
-- Pydantic models for data validation
-- HTTP methods and status codes
-- Request/response handling
-- Error handling and validation
-- CORS configuration
+**Key Focus Areas**:
+
+- Database design and migrations (SQLModel/Alembic)
+- JWT authentication and authorization
+- Advanced API patterns (pagination, filtering, searching)
+- Input validation and error handling
+- Testing and code quality
+- Security best practices
 
 ## Getting Started
 
 ### Prerequisites
 
 - Python 3.12+
+- PostgreSQL (recommended) or SQLite
 - This project uses `uv` for dependency management
 
 ### Setup
 
 1. Clone this repository
-2. Install dependencies:
+2. Create a `.env` file (see `.env.example`)
+3. Install dependencies:
    ```bash
    uv sync
    ```
-3. Run the development server:
+4. Run the development server:
    ```bash
    uv run uvicorn app.main:app --reload
    ```
 
 The API will be available at `http://localhost:8000`
 
-## Assessment Tasks
+## Required Tasks
 
-You need to implement a complete CRUD API for managing todos. The API should handle the following operations:
+### Task 1: Database Setup & Models (SQLModel)
 
-### Task 1: Data Models
+Create SQLModel database models (combines SQLModel + Pydantic):
 
-Create Pydantic models in `app/models.py`:
+- **User Model**:
+  - `id`: UUID primary key
+  - `email`: Unique, indexed, validated
+  - `username`: Unique, indexed
+  - `hashed_password`: String
+  - `is_active`: Boolean (default True)
+  - `created_at`: DateTime with timezone
+  - `updated_at`: DateTime with timezone
 
-- **Todo model** with fields: `id` (int), `title` (str), `completed` (bool)
-- **Request models** for creating and updating todos
-- **Response models** for API responses
+- **Todo Model**:
+  - `id`: UUID primary key
+  - `title`: String (max 200 chars, required)
+  - `description`: Text (required)
+  - `completed`: Boolean (default False)
+  - `priority`: Enum (LOW, MEDIUM, HIGH)
+  - `due_date`: DateTime with timezone (optional)
+  - `category`: String (optional, indexed)
+  - `user_id`: Foreign key to User (indexed)
+  - `created_at`: DateTime with timezone
+  - `updated_at`: DateTime with timezone
 
-### Task 2: In-Memory Database
+- Request/response schemas with proper validation
+- Use Pydantic V2 features (field validators, model config)
+- Separate schemas for create, update, and response
 
-Implement basic data storage in `app/database.py`, you can implement this in any way you like:
+### Task 2: Authentication System
 
-- Initialize with sample todo data
-- Provide functions for CRUD operations
-- Handle ID generation for new todos
+Implement JWT-based authentication:
 
-### Task 3: API Endpoints
+- **POST /auth/register**: Create new user
+  - Email validation (must be valid email format)
+  - Password strength requirements (min 8 chars, special char, number)
+- **POST /auth/login**: User login
+  - Return JWT access token
+  - Token expiry: access (30 min)
+- **GET /auth/me**: Get current user profile (protected)
 
-Implement the following endpoints in `app/routers/todos.py`:
+### Task 3: Database Layer & Repository Pattern
 
-#### GET /todos
+Set up database connection:
 
-- Returns all todos
-- Response: `200 OK` with list of todos
+- Use SQLModel with async support
+- Connection pooling configuration
+- Proper session management with dependency injection
+
+### Task 4: Advanced Todo API Endpoints
+
+All endpoints require authentication (Bearer token).
 
 #### POST /todos
 
-- Creates a new todo
-- Request body: `{"title": "Your todo title"}`
-- Response: `201 Created` with created todo
-- Validation: title is required and non-empty
+Create a new todo with validation:
 
-#### PUT /todos/{todo_id}
+#### GET /todos
 
-- Updates an existing todo
-- Request body: `{"title": "Updated title", "completed": true}` (both fields optional)
-- Response: `200 OK` with updated todo
-- Response: `404 Not Found` if todo doesn't exist
+Get all todos. Hide description. (Only authenticate users, and can see other todos except `description` field)
+
+#### GET /todos/{todo_id}
+
+Get single todo (only owner)
+
+#### PUT or PATCH /todos/{todo_id}
+
+Update todo (partial updates supported) (only owner)
 
 #### DELETE /todos/{todo_id}
 
-- Deletes a todo
-- Response: `204 No Content` on success
-- Response: `404 Not Found` if todo doesn't exist
+Delete todo (only owner)
 
-### Task 4: FastAPI Application Setup
+#### PATCH /todos/{todo_id}/complete
 
-Configure the main FastAPI app in `app/main.py`:
+Mark todo as complete (only owner)
 
-- Include the todos router
-- Add basic error handling
+#### GET /todos/stats
 
-### Task 5: Error Handling
+Get user's todo statistics: total, completed, pending, by priority (only owner)
 
-Implement proper error responses:
+### Task 5: Middleware & Error Handling
 
-- `400 Bad Request` for validation errors
-- `404 Not Found` for non-existent resources
-- `422 Unprocessable Entity` for invalid request data
+Implement:
 
-## API Contract Specification
+- Request ID middleware (generate UUID for each request)
+- Logging middleware (log request/response)
+- Rate limiting (optional: use slowapi)
+- Global exception handlers
+- Custom error responses with proper status codes
 
-### Todo Data Structure
+### Task 6: Migrations & Seeding
 
-```json
-{
-  "id": 1,
-  "title": "Complete the assessment",
-  "completed": false
-}
+- Set up Alembic for database migrations
+- Create initial migration for User and Todo tables
+- Add indexes for performance
+- Create seed script with sample data
+
+### Task 7: Testing
+
+Implement comprehensive tests:
+
+**Unit Tests**:
+
+- Test utility functions (password hashing, token generation)
+- Test repository methods
+- Test Pydantic schema validation
+
+**Integration Tests**:
+
+- Test API endpoints with test database
+- Test authentication flows
+- Test authorization (users can't access others' todos)
+- Test pagination and filtering
+- Test error cases (404, 401, 422, etc.)
+
+**Test Coverage**: Aim for 70%+ coverage
+
+Run tests:
+
+```bash
+uv run pytest tests/ -v --cov=app --cov-report=html
 ```
 
-### Request/Response Examples
+### Task 8: API Documentation & Validation
 
-**GET /todos**
+- Leverage FastAPI's auto-generated docs (`/docs`)
+- Add comprehensive docstrings to all endpoints
+- Use OpenAPI tags for organization
+- Add request/response examples in schemas
+- Version your API (`/api/v1/...`)
 
-```json
-Response (200):
-[
-  {
-    "id": 1,
-    "title": "Write documentation",
-    "completed": false
-  },
-  {
-    "id": 2,
-    "title": "Review code",
-    "completed": true
-  }
-]
-```
+## Technical Requirements
 
-**POST /todos**
+### Database
 
-```json
-Request:
-{
-  "title": "New todo item"
-}
+- [ ] Use SQLAlchemy 2.0+ with async support
+- [ ] Implement proper migrations with Alembic
+- [ ] Add database indexes for performance
+- [ ] Use UUID for primary keys
+- [ ] Connection pooling configured
 
-Response (201):
-{
-  "id": 3,
-  "title": "New todo item",
-  "completed": false
-}
-```
+### Authentication
 
-**PUT /todos/1**
+- [ ] JWT tokens with proper expiration
+- [ ] Secure password hashing
+- [ ] Protected endpoints with dependencies
+- [ ] User can only access their own todos (Note: all todos can be viewed by all authenticated users)
 
-```json
-Request:
-{
-  "title": "Updated todo title",
-  "completed": true
-}
+### API Design
 
-Response (200):
-{
-  "id": 1,
-  "title": "Updated todo title",
-  "completed": true
-}
-```
+- [ ] RESTful conventions followed
+- [ ] Proper HTTP status codes
+- [ ] Pagination for list endpoints
+- [ ] Filtering and search capabilities
+- [ ] Input validation with Pydantic V2
+- [ ] Consistent error response format
 
-**DELETE /todos/1**
+### Code Quality
 
-```
-Response: 204 No Content
-```
+- [ ] Type hints throughout
+- [ ] Proper project structure
+- [ ] Environment-based configuration
+- [ ] Logging configured
+- [ ] PEP 8 compliance (use ruff/black)
 
-## Helpful Resources
+### Testing
 
-These are some helpful resources to use if you're not entirely familiar.
+- [ ] Unit tests for business logic
+- [ ] Integration tests for API endpoints
+- [ ] Minimum 70% code coverage
 
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [Pydantic Documentation](https://docs.pydantic.dev/)
-- [HTTP Status Codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status)
+## Bonus Points
 
-## Testing Your Implementation
-
-Once completed, you can test your API using:
-
-- FastAPI's automatic documentation at `http://localhost:8000/docs`
-- curl commands or tools like Postman
-- The browser for GET endpoints
+- [ ] Add rate limiting with slowapi
+- [ ] Add /health for checking database connection
 
 ## Submission
 
-Ensure your code:
+Ensure your submission:
 
-- Runs without errors using `uv run uvicorn app.main:app --reload`
-- Implements all required endpoints
-- Handles edge cases and errors appropriately
-- Follows Python and FastAPI conventions
+1. **Runs Successfully**:
+
+   ```bash
+   uv run uvicorn app.main:app --reload
+   uv run pytest tests/ -v
+   ```
+
+2. **Includes Documentation**:
+   - Clear setup instructions in README
+   - `.env.example` file
+   - API documentation accessible at `/docs`
+
+3. **Code Quality**:
+   - Passes linting
+   - Type checked
+   - All tests passing
+
+4. **Database**:
+   - Migrations folder included
+   - Seed data script
+
+**Good luck!** 🚀

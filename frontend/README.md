@@ -81,7 +81,6 @@ Build comprehensive todo interface:
 - [ ] Filtering by:
   - Priority (HIGH, MEDIUM, LOW)
 - [ ] Search by title functionality (debounced, min 2 chars)
-- [ ] Sorting options by created_at supporting both asc and desc
 - [ ] Empty states with helpful messages
 - [ ] Skeleton loaders during fetch
 - [ ] Infinite scroll or pagination controls

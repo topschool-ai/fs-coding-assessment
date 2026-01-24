@@ -1,0 +1,27 @@
+from typing import AsyncGenerator
+
+from sqlalchemy.orm import sessionmaker
+from sqlmodel import create_engine
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from app.core.config import get_settings
+
+
+settings = get_settings()
+
+engine = create_async_engine(
+    settings.DATABASE_URL,
+    echo=False,
+    pool_pre_ping=True,
+    pool_size=5,  # Max number of permanent connections
+    max_overflow=10,  # Max number of connections above pool_size
+    pool_timeout=30,  # Seconds to wait for connection from pool
+    pool_recycle=3600,  # Recycle connections after 1 hour (prevents stale connections)
+)
+
+
+# Dependency to get async session
+async def get_async_session() -> AsyncSession:
+    async with AsyncSession(engine) as session:
+        yield session

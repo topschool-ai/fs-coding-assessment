@@ -7,7 +7,6 @@ This assessment evaluates your ability to build a **production-grade RESTful API
 **Key Focus Areas**:
 
 - Database design and migrations (SQLModel/Alembic)
-- JWT authentication and authorization
 - Advanced API patterns (pagination, filtering, searching)
 - Input validation and error handling
 - Testing and code quality
@@ -18,7 +17,7 @@ This assessment evaluates your ability to build a **production-grade RESTful API
 ### Prerequisites
 
 - Python 3.12+
-- PostgreSQL (recommended) or SQLite
+- PostgreSQL
 - This project uses `uv` for dependency management
 
 ### Setup
@@ -33,211 +32,237 @@ This assessment evaluates your ability to build a **production-grade RESTful API
    ```bash
    uv run uvicorn app.main:app --reload
    ```
+5. Run all tests:
+   ```bash
+   uv run pytest
+   ```
 
 The API will be available at `http://localhost:8000`
 
 ## Required Tasks
 
-### Task 1: Database Setup & Models (SQLModel)
+### Task 1: Database Relationship - Connect Todo and User Tables
 
-Create SQLModel database models (combines SQLModel + Pydantic):
+### Task 2: Implement Todo CRUD API Endpoints
 
-- **User Model**:
-  - `id`: UUID primary key
-  - `email`: Unique, indexed, validated
-  - `username`: Unique, indexed
-  - `hashed_password`: String
-  - `is_active`: Boolean (default True)
-  - `created_at`: DateTime with timezone
-  - `updated_at`: DateTime with timezone
+Implement complete CRUD operations for todos. All endpoints require authentication (Bearer token).
 
-- **Todo Model**:
-  - `id`: UUID primary key
-  - `title`: String (max 200 chars, required)
-  - `description`: Text (required)
-  - `completed`: Boolean (default False)
-  - `priority`: Enum (LOW, MEDIUM, HIGH)
-  - `due_date`: DateTime with timezone (optional)
-  - `category`: String (optional, indexed)
-  - `user_id`: Foreign key to User (indexed)
-  - `created_at`: DateTime with timezone
-  - `updated_at`: DateTime with timezone
+#### POST /api/v1/todos
 
-- Request/response schemas with proper validation
-- Use Pydantic V2 features (field validators, model config)
-- Separate schemas for create, update, and response
+Create a new todo:
 
-### Task 2: Authentication System
+- Accept: `title`, `description`, `priority` (optional), `due_date` (optional)
+- Auto-assign to authenticated user
+- Return created todo with 201 status
 
-Implement JWT-based authentication:
+#### GET /api/v1/todos
 
-- **POST /auth/register**: Create new user
-  - Email validation (must be valid email format)
-  - Password strength requirements (min 8 chars, special char, number)
-- **POST /auth/login**: User login
-  - Return JWT access token
-  - Token expiry: access (30 min)
-- **GET /auth/me**: Get current user profile (protected)
+Get all todos:
 
-### Task 3: Database Layer & Repository Pattern
+- Return all todos from ALL users (authenticated users can see others' todos)
+- Hide `description` field for todos not owned by the current user
+- Include `user_id` or `User` to identify owner
 
-Set up database connection:
+#### GET /api/v1/todos/{todo_id}
 
-- Use SQLModel with async support
-- Connection pooling configuration
-- Proper session management with dependency injection
+Get single todo:
 
-### Task 4: Advanced Todo API Endpoints
+- Only owner can access full details
+- Return 403 if user tries to access someone else's todo
+- Return 404 if todo doesn't exist
 
-All endpoints require authentication (Bearer token).
+#### PUT /api/v1/todos/{todo_id} or PATCH /api/v1/todos/{todo_id}
 
-#### POST /todos
+Update todo:
 
-Create a new todo with validation:
+- Only owner can update
+- Support partial updates (PATCH)
+- Validate input fields
+- Return 403 if not owner
 
-#### GET /todos
+#### DELETE /api/v1/todos/{todo_id}
 
-Get all todos. Hide description. (Only authenticate users, and can see other todos except `description` field)
+Delete todo:
 
-#### GET /todos/{todo_id}
+- Only owner can delete
+- Return 204 on success
+- Return 403 if not owner
 
-Get single todo (only owner)
+#### PATCH /api/v1/todos/{todo_id}/complete
 
-#### PUT or PATCH /todos/{todo_id}
+Mark todo as complete:
 
-Update todo (partial updates supported) (only owner)
+- Only owner can mark as complete
+- Toggle `completed` status
+- Return updated todo
 
-#### DELETE /todos/{todo_id}
+### Task 3: Implement Todo Statistics Endpoint
 
-Delete todo (only owner)
+#### GET /api/v1/todos/stats
 
-#### PATCH /todos/{todo_id}/complete
+Get statistics for the authenticated user's todos:
 
-Mark todo as complete (only owner)
+**Response format**:
 
-#### GET /todos/stats
+```json
+{
+  "total": 10,
+  "completed": 4,
+  "pending": 6,
+  "by_priority": {
+    "LOW": 3,
+    "MEDIUM": 5,
+    "HIGH": 2
+  }
+}
+```
 
-Get user's todo statistics: total, completed, pending, by priority (only owner)
+**Requirements**:
 
-### Task 5: Middleware & Error Handling
+- Only count todos belonging to the authenticated user
+- Calculate totals efficiently (use database aggregation if possible)
+- Return proper schema with type validation
 
-Implement:
+### Task 4: Write Test Cases
 
-- Request ID middleware (generate UUID for each request)
-- Logging middleware (log request/response)
-- Rate limiting (optional: use slowapi)
-- Global exception handlers
-- Custom error responses with proper status codes
+**Priority: CRITICAL**
 
-### Task 6: Migrations & Seeding
+Create test file `tests/test_todos.py` with the following test cases:
 
-- Set up Alembic for database migrations
-- Create initial migration for User and Todo tables
-- Add indexes for performance
-- Create seed script with sample data
+**Required Tests**:
 
-### Task 7: Testing
+1. **`test_create_todo_success`** - Create todo successfully
+   - Test that an authenticated user can create a todo
+   - Verify the response contains correct data
+   - Verify status code is 201
 
-Implement comprehensive tests:
-
-**Unit Tests**:
-
-- Test utility functions (password hashing, token generation)
-- Test repository methods
-- Test Pydantic schema validation
-
-**Integration Tests**:
-
-- Test API endpoints with test database
-- Test authentication flows
-- Test authorization (users can't access others' todos)
-- Test pagination and filtering
-- Test error cases (404, 401, 422, etc.)
-
-**Test Coverage**: Aim for 70%+ coverage
+2. **`test_get_all_todos`** - Get all todos
+   - Test that an authenticated user can get all todos
+   - Verify description is hidden for todos not owned by the user
+   - Verify todos show user_id or username to identify owner
+   - Verify status code is 200
 
 Run tests:
 
 ```bash
-uv run pytest tests/ -v --cov=app --cov-report=html
+uv run pytest tests/test_todos.py -v
 ```
 
-### Task 8: API Documentation & Validation
+## Checklist
 
-- Leverage FastAPI's auto-generated docs (`/docs`)
-- Add comprehensive docstrings to all endpoints
-- Use OpenAPI tags for organization
-- Add request/response examples in schemas
-- Version your API (`/api/v1/...`)
+### Core Requirements (Must Complete)
 
-## Technical Requirements
-
-### Database
-
-- [ ] Use SQLAlchemy 2.0+ with async support
-- [ ] Implement proper migrations with Alembic
-- [ ] Add database indexes for performance
-- [ ] Use UUID for primary keys
-- [ ] Connection pooling configured
-
-### Authentication
-
-- [ ] JWT tokens with proper expiration
-- [ ] Secure password hashing
-- [ ] Protected endpoints with dependencies
-- [ ] User can only access their own todos (Note: all todos can be viewed by all authenticated users)
-
-### API Design
-
-- [ ] RESTful conventions followed
-- [ ] Proper HTTP status codes
-- [ ] Pagination for list endpoints
-- [ ] Filtering and search capabilities
-- [ ] Input validation with Pydantic V2
-- [ ] Consistent error response format
+- [ ] **Task 1**: Add foreign key relationship between Todo and User tables
+- [ ] **Task 2**: Implement all 6 Todo CRUD endpoints
+  - [ ] POST /api/v1/todos (Create)
+  - [ ] GET /api/v1/todos (List all - hide description for non-owners)
+  - [ ] GET /api/v1/todos/{id} (Get single - owner only)
+  - [ ] PATCH /api/v1/todos/{id} (Update - owner only)
+  - [ ] DELETE /api/v1/todos/{id} (Delete - owner only)
+  - [ ] PATCH /api/v1/todos/{id}/complete (Mark complete - owner only)
+- [ ] **Task 3**: Implement GET /api/v1/todos/stats endpoint
+- [ ] **Task 4**: Write tests in `tests/test_todos.py`
+  - [ ] test_create_todo_success
+  - [ ] test_get_all_todos (verify description hiding for non-owners)
 
 ### Code Quality
 
-- [ ] Type hints throughout
-- [ ] Proper project structure
-- [ ] Environment-based configuration
-- [ ] Logging configured
-- [ ] PEP 8 compliance (use ruff/black)
+- [ ] Type hints on all functions
+- [ ] Proper error handling with custom exceptions
+- [ ] Docstrings on all endpoints
+- [ ] Follow RESTful conventions
+- [ ] Use proper HTTP status codes
+- [ ] Input validation with Pydantic
 
-### Testing
+### Database
 
-- [ ] Unit tests for business logic
-- [ ] Integration tests for API endpoints
-- [ ] Minimum 70% code coverage
+- [ ] Foreign key constraint added with migration
+- [ ] Database indexes on `user_id`
+- [ ] Proper async database sessions
 
 ## Bonus Points
 
-- [ ] Add rate limiting with slowapi
-- [ ] Add /health for checking database connection
+- [ ] Add pagination to GET /api/v1/todos
+- [ ] Add filtering by priority/completed
+- [ ] Add sorting options
+- [ ] Add search functionality
 
 ## Submission
 
 Ensure your submission:
+Testing Your Implementation
 
-1. **Runs Successfully**:
+### Run the Application
+
+```bash
+uv run uvicorn app.main:app --reload
+```
+
+Visit `http://localhost:8000/docs` to test endpoints interactively.
+
+### Run Tests
+
+```bash
+# Run all tests
+uv run pytest tests/ -v
+
+# Run only todo tests
+uv run pytest tests/test_todos.py -v
+
+# Run with coverage
+uv run pytest tests/test_todos.py -v --cov=app --cov-report=html --cov-report=term
+```
+
+### Test the Endpoints Manually
+
+1. **Register a user**:
 
    ```bash
-   uv run uvicorn app.main:app --reload
-   uv run pytest tests/ -v
+   curl -X POST http://localhost:8000/api/v1/auth/register \
+     -H "Content-Type: application/json" \
+     -d '{"email":"user@example.com","username":"testuser","password":"Password123!"}'
    ```
 
-2. **Includes Documentation**:
-   - Clear setup instructions in README
-   - `.env.example` file
-   - API documentation accessible at `/docs`
+2. **Login and get token**:
 
-3. **Code Quality**:
-   - Passes linting
-   - Type checked
-   - All tests passing
+   ```bash
+   curl -X POST http://localhost:8000/api/v1/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"username":"testuser","password":"Password123!"}'
+   ```
 
-4. **Database**:
-   - Migrations folder included
-   - Seed data script
+3. **Create a todo** (use token from login):
 
-**Good luck!** 🚀
+   ```bash
+   curl -X POST http://localhost:8000/api/v1/todos \
+     -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+     -H "Content-Type: application/json" \
+     -d '{"title":"Test Todo","description":"Test description","priority":"HIGH"}'
+   ```
+
+4. **Get all todos**:
+
+   ```bash
+   curl -X GET http://localhost:8000/api/v1/todos \
+     -H "Authorization: Bearer YOUR_TOKEN_HERE"
+   ```
+
+5. **Get stats**:
+   ```bash
+   curl -X GET http://localhost:8000/api/v1/todos/stats \
+     -H "Authorization: Bearer YOUR_TOKEN_HERE"
+   ```
+
+## Submission Checklist
+
+Before submitting, ensure:
+
+- [ ] All 4 core tasks are completed
+- [ ] Application starts without errors
+- [ ] All tests pass (`uv run pytest tests/ -v`)
+- [ ] Test coverage is at least 70% for todo endpoints
+- [ ] API documentation at `/docs` shows all endpoints
+- [ ] Foreign key relationship exists between Todo and User
+- [ ] Both required test cases are implemented and passingtodos
+- [ ] Stats endpoint returns correct calculations
+- [ ] Code follows Python best practices (type hints, docstrings)

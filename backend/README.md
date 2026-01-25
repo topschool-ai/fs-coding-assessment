@@ -64,6 +64,9 @@ Get all todos:
 
 - Return all todos from ALL users (authenticated users can see others' todos)
 - Hide `description` field for todos not owned by the current user
+- Query pagination (default page=1 & page_size=20)
+- Query filtering by priority/completed
+- Search title functionality
 - Include `user_id` or `User` to identify owner
 
 #### GET /api/v1/todos/{todo_id}
@@ -158,7 +161,7 @@ uv run pytest tests/test_todos.py -v
 - [ ] **Task 1**: Add foreign key relationship between Todo and User tables
 - [ ] **Task 2**: Implement all 6 Todo CRUD endpoints
   - [ ] POST /api/v1/todos (Create)
-  - [ ] GET /api/v1/todos (List all - hide description for non-owners)
+  - [ ] GET /api/v1/todos (List all - hide description for non-owners, pagination, filtering, search)
   - [ ] GET /api/v1/todos/{id} (Get single - owner only)
   - [ ] PATCH /api/v1/todos/{id} (Update - owner only)
   - [ ] DELETE /api/v1/todos/{id} (Delete - owner only)
@@ -182,13 +185,6 @@ uv run pytest tests/test_todos.py -v
 - [ ] Foreign key constraint added with migration
 - [ ] Database indexes on `user_id`
 - [ ] Proper async database sessions
-
-## Bonus Points
-
-- [ ] Add pagination to GET /api/v1/todos
-- [ ] Add filtering by priority/completed
-- [ ] Add sorting options
-- [ ] Add search functionality
 
 ## Submission
 

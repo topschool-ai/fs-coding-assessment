@@ -82,7 +82,7 @@ Build comprehensive todo interface:
   - Priority (HIGH, MEDIUM, LOW)
 - [ ] Search by title functionality (debounced, min 2 chars)
 - [ ] Empty states with helpful messages
-- [ ] Skeleton loaders during fetch
+- [ ] Spinner during fetch
 - [ ] Infinite scroll or pagination controls
 
 #### Todo Item Features
@@ -113,8 +113,6 @@ Implement production-ready UX patterns:
 
 - [ ] Immediately update UI when user takes action
 - [ ] Show pending state (e.g., opacity, spinner)
-- [ ] Rollback on error
-- [ ] Re-fetch on error recovery
 
 #### Error Handling
 
@@ -123,33 +121,19 @@ Implement production-ready UX patterns:
 - [ ] Toast notifications for success/error
 - [ ] Form validation errors displayed inline
 
-#### Loading States
-
-- [ ] Skeleton screens for initial load
-- [ ] Button loading spinners
-- [ ] Progress indicators for long operations
-- [ ] Suspense boundaries
-
 ### Task 4: Accessibility & UX
 
 - [ ] Semantic HTML throughout
 - [ ] ARIA labels and roles
 - [ ] Keyboard navigation support (Tab, Enter, Escape)
-- [ ] Focus management (modals, forms)
 - [ ] Screen reader friendly
-- [ ] Color contrast meets WCAG AA standards
-- [ ] Loading announcements for screen readers
-- [ ] Error announcements
-- [ ] Mobile-friendly touch targets
 
 ### Task 5: Responsive Design
 
 Using Tailwind CSS:
 
 - [ ] Mobile-first approach
-- [ ] Responsive navigation (hamburger menu on mobile)
 - [ ] Adaptive layouts (grid/flex)
-- [ ] Touch-friendly controls on mobile
 - [ ] Work on multiple device sizes
 
 ---

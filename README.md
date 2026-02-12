@@ -6,7 +6,7 @@ Welcome to the Full Stack Engineering Assessment! This challenge evaluates your 
 
 ## 🎯 Objective
 
-Build a complete, production-grade TODO application with:
+Build a complete TODO application with:
 
 - **Backend**: RESTful API using FastAPI with PostgreSQL/SQLite database, JWT authentication, and comprehensive testing
 - **Frontend**: Next.js application with state management, authentication flow, optimistic updates, and error handling
